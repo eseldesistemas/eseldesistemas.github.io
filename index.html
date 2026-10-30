@@ -120,8 +120,8 @@ a{color:inherit}
 
 <script>
 'use strict';
-const apps=[{"name": "Google Chrome", "category": "Navegadores", "manufacturer": "Google", "logo": "googlechrome", "url": "https://dl.google.com/dl/chrome/install/googlechromestandaloneenterprise64.msi", "version": "Windows 64 bits", "id": "googlechrome"}, {"name": "Mozilla Firefox", "category": "Navegadores", "manufacturer": "Mozilla", "logo": "firefoxbrowser", "url": "https://download.mozilla.org/?product=firefox-latest&os=win64&lang=es-AR", "version": "Windows 64 bits", "id": "mozillafirefox"}, {"name": "7-Zip", "category": "Utilidades", "manufacturer": "7-Zip", "logo": "7zip", "url": "https://github.com/ip7z/7zip/releases/download/26.05/7z2605-x64.exe", "version": "26.05 · Windows 64 bits", "id": "7zip"}, {"name": "VLC Media Player", "category": "Multimedia", "manufacturer": "VideoLAN", "logo": "vlcmediaplayer", "url": "https://downloads.videolan.org/vlc/last/win64/vlc-3.0.24-win64.exe", "version": "3.0.24 · Windows 64 bits", "id": "vlcmediaplayer"}, {"name": "LibreOffice", "category": "Ofimática", "manufacturer": "The Document Foundation", "logo": "libreoffice", "url": "https://download.documentfoundation.org/libreoffice/stable/26.8.2/win/x86_64/LibreOffice_26.8.2_Win_x86-64.msi", "version": "26.8.2 · Windows 64 bits", "id": "libreoffice"}, {"name": "SumatraPDF", "category": "Ofimática", "manufacturer": "SumatraPDF", "logo": "", "url": "https://www.sumatrapdfreader.org/dl/SumatraPDF-3.6.1-64-install.exe", "version": "3.6.1 · Windows 64 bits", "id": "sumatrapdf"}, {"name": "Notepad++", "category": "Utilidades", "manufacturer": "Notepad++", "logo": "notepadplusplus", "url": "https://github.com/notepad-plus-plus/notepad-plus-plus/releases/download/v8.9.8.1/npp.8.9.8.1.Installer.x64.exe", "version": "8.9.8.1 · Windows 64 bits", "id": "notepadplusplus"}, {"name": "Microsoft 365", "category": "Ofimática", "manufacturer": "Microsoft", "logo": "microsoftoffice", "url": "", "version": "Pendiente de configurar", "id": "microsoft365"}, {"name": "AutoCAD", "category": "Diseño y CAD", "manufacturer": "Autodesk", "logo": "autodesk", "url": "", "version": "Paquete propio en Drive", "id": "autocad"}, {"name": "Revit", "category": "Diseño y CAD", "manufacturer": "Autodesk", "logo": "autodesk", "url": "", "version": "Paquete propio en Drive", "id": "revit"}, {"name": "Lumion", "category": "Diseño y CAD", "manufacturer": "Lumion", "logo": "", "url": "", "version": "Paquete propio en Drive", "id": "lumion"}, {"name": "Blender", "category": "Diseño y CAD", "manufacturer": "Blender Foundation", "logo": "blender", "url": "https://www.blender.org/download/", "version": "Sitio oficial", "id": "blender"}];
-const categories=['Todas', ...new Set(apps.map(a=>a.category))];
+const apps=[];
+const categories=['Todas','Navegadores','Ofimática','Utilidades','Multimedia','Diseño y CAD'];
 let category='Todas', query='', onlyFav=false, view='list';
 let openCategories=new Set();
 let favorites=[]; try { favorites=JSON.parse(localStorage.getItem('eds-favorites') || '["googlechrome","7zip","autocad"]'); } catch(e) { favorites=['googlechrome','7zip','autocad']; }
@@ -195,8 +195,7 @@ function render(){
   });
   const filtered=apps.filter(a=>(category==='Todas'||a.category===category)&&(!onlyFav||favorites.includes(a.id))&&(a.name+' '+a.manufacturer+' '+a.category).toLowerCase().includes(query.toLowerCase()));
   const results=$('results');results.className='grouped';results.replaceChildren();
-  if(!filtered.length){const empty=document.createElement('div');empty.className='empty';empty.textContent='No hay programas que coincidan con los filtros.';results.appendChild(empty);return;}
-  categories.filter(c=>c!=='Todas'&&filtered.some(a=>a.category===c)).forEach(c=>{
+  categories.filter(c=>c!=='Todas'&&(category==='Todas'||category===c)).forEach(c=>{
     const group=document.createElement('section');group.className='categorygroup';group.id='group-'+categories.indexOf(c);
     const head=document.createElement('button');head.type='button';head.className='categoryhead';
     const isOpen=query.trim().length>0||category!=='Todas'||openCategories.has(c);
@@ -204,11 +203,12 @@ function render(){
     const body=document.createElement('div');body.className='categorybody '+(view==='list'?'list':'tiles');body.hidden=!isOpen;
     const badge=document.createElement('span');badge.className='categorybadge';badge.appendChild(lineIcon(categoryIcon(c)));
     const name=document.createElement('span');name.textContent=c;
-    const count=document.createElement('span');count.className='categorycount';count.textContent=filtered.filter(a=>a.category===c).length+' programas';
+    const count=document.createElement('span');count.className='categorycount';const quantity=filtered.filter(a=>a.category===c).length;count.textContent=quantity ? quantity+' programas' : '';
     const arrow=document.createElement('span');arrow.className='categorychevron';arrow.textContent='⌄';
     head.append(badge,name,count,arrow);
     head.onclick=()=>{const show=head.getAttribute('aria-expanded')!=='true';head.setAttribute('aria-expanded',String(show));body.hidden=!show;if(show)openCategories.add(c);else openCategories.delete(c);};
     filtered.filter(a=>a.category===c).forEach(a=>body.appendChild(makeCard(a)));
+    if(!body.childElementCount){const empty=document.createElement('div');empty.className='empty';empty.textContent='Sin programas cargados';body.appendChild(empty)}
     group.append(head,body);results.append(group);
   });
 }

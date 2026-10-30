@@ -208,6 +208,49 @@ a{color:inherit}
 .browseapp .app-summary{color:#858a91;font-size:12px;font-weight:400;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
 @media(max-width:980px){.browseapp>.info{gap:8px}.browseapp .app-summary{font-size:11px}}
 @media(max-width:540px){.browseapp>.info{flex-wrap:wrap;column-gap:8px;row-gap:2px}.browseapp .app-summary{flex:1 1 100%;white-space:nowrap}}
+
+/* Vista móvil compacta: una fila por programa, sin información repetida. */
+@media (max-width: 640px) {
+ .main{padding:10px 10px 24px}
+ .categorygroup{margin-bottom:8px;border-radius:13px}
+ .categoryhead{min-height:54px;padding:10px 12px;gap:8px;font-size:14px}
+ .categorybadge{width:25px;height:25px}
+ .categorybadge svg{width:21px;height:21px}
+ .categorybody{padding:7px}
+ .categorybody.list{gap:6px}
+ .rowapp.browseapp{
+  display:grid;
+  grid-template-columns:29px minmax(0,1fr) auto;
+  grid-template-areas:"fav info buttons";
+  gap:7px;
+  align-items:center;
+  padding:8px 9px;
+  min-height:51px;
+  border-radius:11px;
+ }
+ .browseapp>.fav{grid-area:fav;width:29px;height:29px;min-width:29px;justify-self:start;align-self:center;border-radius:8px}
+ .browseapp>.info{grid-area:info;display:block;min-width:0;align-self:center}
+ .browseapp .name{font-size:13px;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+ .browseapp .app-summary{display:none}
+ .browseapp>.indicators{display:none}
+ .browseapp>.download-options{grid-area:buttons;display:flex;flex-wrap:nowrap;justify-self:end;align-self:center;gap:4px}
+ .browseapp .download-options .download,
+ .browseapp .download-options .official-web,
+ .browseapp .download-options .private-disk{
+  width:32px;min-width:32px;height:32px;min-height:32px;flex:0 0 32px;border-radius:9px;padding:0
+ }
+ .browseapp .download-options svg{width:17px;height:17px}
+ #logoutSecure{position:static!important;display:block;margin:10px 12px 22px auto;padding:9px 12px}
+}
+@media (max-width: 360px) {
+ .rowapp.browseapp{grid-template-columns:27px minmax(0,1fr) auto;gap:5px;padding:7px}
+ .browseapp .name{font-size:12px}
+ .browseapp .download-options .download,
+ .browseapp .download-options .official-web,
+ .browseapp .download-options .private-disk{
+  width:29px;min-width:29px;height:30px;min-height:30px;flex:0 0 29px
+ }
+}
 </style>
 </head>
 <body>

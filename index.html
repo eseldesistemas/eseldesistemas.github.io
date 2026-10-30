@@ -155,6 +155,22 @@ a{color:inherit}
   .browseapp{grid-template-columns:38px 42px minmax(0,1fr);grid-template-areas:"fav icon info" "indicators indicators indicators" "buttons buttons buttons"}
   .browseapp>.download-options{justify-self:stretch}
 }
+
+/* Botones con iconos SVG lineales de marca: sin glifos tipográficos. */
+.download-options .download,
+.download-options .official-web{
+ display:inline-flex;align-items:center;justify-content:center;gap:7px;
+ background:#292e35;color:#fff;border:1px solid #292e35;
+ border-radius:12px;font-weight:750;white-space:nowrap;
+}
+.download-options .download:hover,
+.download-options .official-web:hover{background:#414852;border-color:#414852;color:#fff}
+.download-options .download svg,
+.download-options .official-web svg{
+ width:18px;height:18px;flex:none;stroke:#f6b821;stroke-width:2;
+ fill:none;stroke-linecap:round;stroke-linejoin:round;
+}
+@media(max-width:390px){.browseapp .download-options{gap:6px}.download-options .download,.download-options .official-web{min-width:0;flex:1;padding:10px 8px;font-size:12px}.download-options .download svg,.download-options .official-web svg{width:16px;height:16px}}
 </style>
 </head>
 <body>
@@ -220,6 +236,16 @@ function icon(app){
 }
 function downloadFile(url){if(url&&/^https:\/\//.test(url))window.open(url,'_blank','noopener,noreferrer');}
 function download(app){const d=app.downloads?.find(x=>x.kind==='Completo')||app.downloads?.[0];if(d)downloadFile(d.url);}
+function buttonIcon(kind){
+ const paths={
+ cloud:'<path d="M7 18h10a4 4 0 0 0 .6-7.96A6 6 0 0 0 6 9.5 4.3 4.3 0 0 0 7 18z"/>',
+ download:'<path d="M12 3v12m-5-5 5 5 5-5M4 17v4h16v-4"/>',
+ window:'<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M7 6.5h.01M10 6.5h.01"/>'
+ };
+ const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');
+ svg.setAttribute('viewBox','0 0 24 24');svg.setAttribute('aria-hidden','true');
+ svg.innerHTML=paths[kind];return svg;
+}
 function makeCard(app){
  const item=document.createElement('article');item.className='rowapp browseapp';
  const logo=icon(app);
@@ -230,8 +256,8 @@ function makeCard(app){
  const fav=document.createElement('button');fav.className='fav'+(favorites.includes(app.id)?' on':'');fav.textContent=favorites.includes(app.id)?'★':'☆';fav.title='Favorito';fav.setAttribute('aria-label','Favorito '+app.name);fav.onclick=e=>{e.stopPropagation();favorites=favorites.includes(app.id)?favorites.filter(x=>x!==app.id):[...favorites,app.id];saveFav();render()};
  const downloadBox=document.createElement('div');downloadBox.className='download-options';
  const choices=app.downloads||[];
- for(const d of choices){const btn=document.createElement('button');btn.className='download';btn.textContent=d.kind==='Online'?'☁ Online':'↓ Completo';btn.title=d.kind==='Online'?'Descargar instalador liviano':'Descargar instalador completo';btn.onclick=e=>{e.stopPropagation();downloadFile(d.url)};downloadBox.append(btn)}
- if(app.website){const web=document.createElement('button');web.className='official-web';web.textContent='↗ Web';web.title='Abrir sitio oficial';web.setAttribute('aria-label','Abrir sitio oficial de '+app.name);web.onclick=e=>{e.stopPropagation();window.open(app.website,'_blank','noopener,noreferrer')};downloadBox.append(web)}
+ for(const d of choices){const btn=document.createElement('button');btn.className='download';btn.replaceChildren(buttonIcon(d.kind==='Online'?'cloud':'download'),document.createTextNode(d.kind==='Online'?'Online':'Completo'));btn.title=d.kind==='Online'?'Descargar instalador liviano':'Descargar instalador completo';btn.onclick=e=>{e.stopPropagation();downloadFile(d.url)};downloadBox.append(btn)}
+ if(app.website){const web=document.createElement('button');web.className='official-web';web.replaceChildren(buttonIcon('window'),document.createTextNode('Web'));web.title='Abrir sitio oficial';web.setAttribute('aria-label','Abrir sitio oficial de '+app.name);web.onclick=e=>{e.stopPropagation();window.open(app.website,'_blank','noopener,noreferrer')};downloadBox.append(web)}
  if(!choices.length&&!app.website){const pending=document.createElement('span');pending.className='pending';pending.textContent='Pendiente';downloadBox.append(pending)}
  item.append(fav,logo,info,indicators(app),downloadBox);return item;
 }

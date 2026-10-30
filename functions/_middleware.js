@@ -47,11 +47,17 @@ if(path==="/api/login"){
  const token=await crypto.subtle.sign("HMAC",secretKey,enc.encode(body.pin));
  const valid=await crypto.subtle.verify("HMAC",secretKey,token,enc.encode(env.PIN_SECRET));
  if(!valid)return json({error:"Código incorrecto"},401);
- const session=await sign({v:1,exp:Date.now()+8*60*60*1000},env.SESSION_SECRET);
- return json({ok:true},200,{"set-cookie":"eds_session="+session+"; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=28800"});
+ const session=await sign({v:1,exp:Date.now()+5*60*1000},env.SESSION_SECRET);
+ return json({ok:true},200,{"set-cookie":"eds_session="+session+"; HttpOnly; Secure; SameSite=Strict; Path=/"});
 }
 if(path==="/api/logout"&&request.method==="POST")return new Response(null,{status:204,headers:{"set-cookie":"eds_session=; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=0",...headers}});
 if(!await authenticated(request,env.SESSION_SECRET)){return path.startsWith("/api/")?json({error:"Sin autorización"},401):redirect()}
+// Renovación solo tras actividad real del usuario (la web la llama con interacción).
+if(path==="/api/session"){
+ if(request.method!=="POST")return json({error:"Método no permitido"},405);
+ const session=await sign({v:1,exp:Date.now()+5*60*1000},env.SESSION_SECRET);
+ return json({ok:true},200,{"set-cookie":"eds_session="+session+"; HttpOnly; Secure; SameSite=Strict; Path=/"});
+}
 if(path==="/api/private-links"){
  if(request.method!=="GET")return json({error:"Método no permitido"},405);
  if(!env.PRIVATE_LINKS_JSON)return json({error:"Enlaces personales no configurados"},503);

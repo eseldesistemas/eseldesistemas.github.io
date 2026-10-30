@@ -134,6 +134,9 @@ a{color:inherit}
   .rowapp{padding:10px}
   .download{min-width:92px;font-size:12px}
 }
+.browseapp{grid-template-columns:50px minmax(0,1fr) auto auto minmax(160px,auto);gap:12px}.download-options{display:flex;justify-content:flex-end;gap:7px;flex-wrap:wrap}.download-options .download{min-width:94px;padding:11px 12px}.pending{background:#e9e7e1;color:#777b81;padding:11px 14px;border-radius:10px;font-size:12px;font-weight:700}.browseapp .fav{grid-area:auto}
+@media(max-width:980px){.browseapp{grid-template-columns:42px minmax(0,1fr) auto auto;grid-template-areas:'icon info info info' 'fav indicators buttons buttons'}.browseapp>.appicon{grid-area:icon}.browseapp>.info{grid-area:info}.browseapp>.fav{grid-area:fav}.browseapp>.indicators{grid-area:indicators}.browseapp>.download-options{grid-area:buttons;justify-self:end}.download-options .download{min-width:84px;padding:10px 9px;font-size:12px}}
+@media(max-width:390px){.browseapp{grid-template-columns:42px minmax(0,1fr);grid-template-areas:'icon info' 'fav indicators' 'buttons buttons'}.browseapp>.download-options{justify-self:stretch}.browseapp .download-options .download{flex:1}}
 </style>
 </head>
 <body>
@@ -175,7 +178,7 @@ a{color:inherit}
 
 <script>
 'use strict';
-const apps=[];
+const apps=[{"name":"Google Chrome","category":"Navegadores","manufacturer":"Google","logo":"googlechrome","id":"googlechrome","version":"Windows 64 bits","downloads":[{"kind":"Online","url":"https://dl.google.com/chrome/install/ChromeSetup.exe"},{"kind":"Completo","url":"https://dl.google.com/dl/chrome/install/googlechromestandaloneenterprise64.msi"}]},{"name":"Microsoft Edge","category":"Navegadores","manufacturer":"Microsoft","logo":"microsoftedge","id":"microsoftedge","version":"Windows 64 bits","downloads":[]},{"name":"Mozilla Firefox","category":"Navegadores","manufacturer":"Mozilla","logo":"firefoxbrowser","id":"mozillafirefox","version":"Windows 64 bits","downloads":[{"kind":"Online","url":"https://download.mozilla.org/?product=firefox-stub&os=win&lang=es-AR"},{"kind":"Completo","url":"https://download.mozilla.org/?product=firefox-latest-ssl&os=win64&lang=es-AR"}]},{"name":"Brave","category":"Navegadores","manufacturer":"Brave Software","logo":"brave","id":"brave","version":"Windows 64 bits · v1.98.62","downloads":[{"kind":"Online","url":"https://github.com/brave/brave-browser/releases/download/v1.98.62/BraveBrowserSetup.exe"},{"kind":"Completo","url":"https://github.com/brave/brave-browser/releases/download/v1.98.62/BraveBrowserStandaloneSetup.exe"}]},{"name":"Opera","category":"Navegadores","manufacturer":"Opera","logo":"opera","id":"opera","version":"Windows 64 bits","downloads":[]},{"name":"Tor Browser","category":"Navegadores","manufacturer":"Tor Project","logo":"torbrowser","id":"torbrowser","version":"Windows 64 bits · 15.0.26","downloads":[{"kind":"Completo","url":"https://dist.torproject.org/torbrowser/15.0.26/tor-browser-windows-x86_64-portable-15.0.26.exe"}]},{"name":"Chromium","category":"Navegadores","manufacturer":"Chromium","logo":"chromium","id":"chromium","version":"Windows 64 bits · distribución ZIP","downloads":[]}];
 const categories=['Todas','Navegadores','Ofimática','Utilidades','Multimedia','Diseño y CAD'];
 let category='Todas', query='', onlyFav=false, view='list';
 let openCategories=new Set();
@@ -197,19 +200,21 @@ function icon(app){
   } else { span.classList.add('fallback'); span.textContent=app.name[0]; }
   return span;
 }
-function download(app){ if(app.url) window.open(app.url,'_blank','noopener,noreferrer'); }
+function downloadFile(url){if(url&&/^https:\/\//.test(url))window.open(url,'_blank','noopener,noreferrer');}
+function download(app){const d=app.downloads?.find(x=>x.kind==='Completo')||app.downloads?.[0];if(d)downloadFile(d.url);}
 function makeCard(app){
-  const item=document.createElement('article'); item.className=view==='list' ? 'rowapp' : 'tile';
-  if(view==='list' && app.url){ item.classList.add('downloadable'); item.tabIndex=0; item.setAttribute('role','link'); item.setAttribute('aria-label','Descargar '+app.name); item.onclick=()=>download(app); item.onkeydown=e=>{ if((e.key==='Enter'||e.key===' ') && e.target===item){ e.preventDefault(); download(app); } }; }
-  const fav=document.createElement('button'); fav.className='fav'+(favorites.includes(app.id)?' on':''); fav.textContent=favorites.includes(app.id)?'★':'☆'; fav.title='Favorito'; fav.onclick=e=>{ e.stopPropagation(); favorites=favorites.includes(app.id)?favorites.filter(x=>x!==app.id):[...favorites, app.id]; saveFav(); render(); };
-  const info=document.createElement('div'); info.className='info';
-  const name=document.createElement('div'); name.className='name'; name.textContent=app.name;
-  const meta=document.createElement('div'); meta.className='meta'; meta.textContent=app.manufacturer+' · '+app.version;
-  info.append(name,meta);
-  const btn=document.createElement('button'); btn.className='download'; btn.textContent=app.url ? 'Descargar' : 'Pendiente'; btn.disabled=!app.url; btn.onclick=e=>{ e.stopPropagation(); download(app); };
-  if(view==='list'){ item.append(icon(app), info, fav, indicators(app), btn); }
-  else { const top=document.createElement('div'); top.className='tile-top'; top.append(icon(app), fav, indicators(app)); item.append(top, info, btn); }
-  return item;
+ const item=document.createElement('article');item.className='rowapp browseapp';
+ const logo=icon(app);
+ const info=document.createElement('div');info.className='info';
+ const title=document.createElement('div');title.className='name';title.textContent=app.name;
+ const meta=document.createElement('div');meta.className='meta';meta.textContent=app.manufacturer+' · '+app.version;
+ info.append(title,meta);
+ const fav=document.createElement('button');fav.className='fav'+(favorites.includes(app.id)?' on':'');fav.textContent=favorites.includes(app.id)?'★':'☆';fav.title='Favorito';fav.setAttribute('aria-label','Favorito '+app.name);fav.onclick=e=>{e.stopPropagation();favorites=favorites.includes(app.id)?favorites.filter(x=>x!==app.id):[...favorites,app.id];saveFav();render()};
+ const downloadBox=document.createElement('div');downloadBox.className='download-options';
+ const choices=app.downloads||[];
+ for(const d of choices){const btn=document.createElement('button');btn.className='download';btn.textContent=d.kind==='Online'?'Online ↓':'Completo ↓';btn.title=d.kind==='Online'?'Descargar instalador liviano':'Descargar instalador completo';btn.onclick=e=>{e.stopPropagation();downloadFile(d.url)};downloadBox.append(btn)}
+ if(!choices.length){const pending=document.createElement('span');pending.className='pending';pending.textContent='Pendiente';downloadBox.append(pending)}
+ item.append(logo,info,fav,indicators(app),downloadBox);return item;
 }
 function reset(){ category='Todas'; query=''; onlyFav=false; openCategories.clear(); $('search').value=''; render(); }
 function lineIcon(kind){
@@ -230,8 +235,7 @@ function categoryIcon(c){return ({'Navegadores':'globe','Ofimática':'file','Uti
 function indicators(app){
  const el=document.createElement('span');el.className='indicators';
  const tags=[];
- if(['AutoCAD','Revit','Lumion'].includes(app.name))tags.push(['lock','Enlace privado (pendiente de configurar)']);
- else if(app.url)tags.push(['globe','Enlace oficial']);
+ if(app.downloads?.length)tags.push(['globe','Enlace oficial']);
  // No inferir estados de activación ni licencias sin datos confirmados en el catálogo.
  if(app.licenseType==='preactivated')tags.push(['check','Preactivado']);
  if(app.licenseType==='alternative')tags.push(['key','Licencia alternativa']);

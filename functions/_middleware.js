@@ -16,14 +16,30 @@ try{const cookie=request.headers.get("cookie")||"";const value=cookie.match(/(?:
 }
 export async function onRequest(ctx){
 const {request,env}=ctx,url=new URL(request.url),path=url.pathname;
-const configured=/^[0-9]{6}$/.test(env.PIN_SECRET||"")&&typeof env.SESSION_SECRET==="string"&&env.SESSION_SECRET.length>=32&&!!env.AUTH_RATE_LIMITER;
-if(!configured)return json({error:"Falta configurar secretos y limitador de solicitudes"},503);
+const configured=/^[0-9]{6}$/.test(env.PIN_SECRET||"")&&typeof env.SESSION_SECRET==="string"&&env.SESSION_SECRET.length>=32&&!!env.SECURITY_DB;
+if(!configured)return json({error:"Falta configurar secretos o base D1 SECURITY_DB"},503);
 if(path==="/login"&&request.method==="GET"){return await authenticated(request,env.SESSION_SECRET)?new Response(null,{status:303,headers:{location:"/",...headers}}):login()}
 if(path==="/api/login"){
  if(request.method!=="POST")return json({error:"Método no permitido"},405);
- // Rate limiting requiere binding AUTH_RATE_LIMITER creado en Cloudflare.
- const rate=await env.AUTH_RATE_LIMITER.limit({key:request.headers.get("cf-connecting-ip")||"unknown"});
- if(!rate.success)return json({error:"Demasiados intentos"},429);
+ // Control de intentos en D1 por identificador HMAC de la IP. El IP original no se almacena.
+ // Cinco intentos por ventana de 15 minutos, contando también los intentos exitosos.
+ const ip=request.headers.get("cf-connecting-ip")||"unknown";
+ const ipSignature=await crypto.subtle.sign("HMAC",await hkey(env.SESSION_SECRET),enc.encode("rate:"+ip));
+ const clientKey=b64(new Uint8Array(ipSignature));
+ const now=Date.now(),windowLimit=now-15*60*1000;
+ let count;
+ try{
+  const result=await env.SECURITY_DB.prepare(
+   "INSERT INTO login_attempts (client_key, window_start, attempts) VALUES (?1, ?2, 1) "+
+   "ON CONFLICT(client_key) DO UPDATE SET "+
+   "attempts=CASE WHEN login_attempts.window_start<=?3 THEN 1 ELSE login_attempts.attempts+1 END, "+
+   "window_start=CASE WHEN login_attempts.window_start<=?3 THEN excluded.window_start ELSE login_attempts.window_start END "+
+   "RETURNING attempts"
+  ).bind(clientKey,now,windowLimit).first();
+  count=result?.attempts;
+ }catch{return json({error:"Control de acceso temporalmente no disponible"},503)}
+ if(!Number.isInteger(count))return json({error:"Control de acceso no disponible"},503);
+ if(count>5)return json({error:"Demasiados intentos"},429);
  let body;try{body=await request.json()}catch{return json({error:"Solicitud inválida"},400)}
  if(typeof body.pin!=="string"||!/^[0-9]{6}$/.test(body.pin))return json({error:"Código incorrecto"},401);
  // Comparación por HMAC (sin almacenar PIN en el cliente ni en el repositorio).

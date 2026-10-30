@@ -176,6 +176,31 @@ a{color:inherit}
 .download-options .private-disk svg{width:21px;height:21px;stroke:#f6b821;stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round}
 .download-options .private-disk:hover{background:#414852;border-color:#414852}
 @media(max-width:390px){.download-options .private-disk{min-width:43px;flex:0 0 43px}}
+
+/* Filas compactas sin subtitulos: todas las categorias y pantallas */
+.rowapp.browseapp{padding:8px 11px;column-gap:10px;row-gap:6px;border-radius:13px;min-height:0}
+.browseapp .name{font-size:14px;line-height:1.2}
+.browseapp .fav{width:32px;height:32px;min-width:32px;border-radius:9px;font-size:16px}
+.browseapp{grid-template-columns:32px minmax(0,1fr) auto minmax(0,auto)}
+.browseapp .download-options{gap:5px}
+.browseapp .download-options .download,
+.browseapp .download-options .official-web,
+.browseapp .download-options .private-disk{width:35px;min-width:35px;height:34px;min-height:34px;padding:0;border-radius:9px;flex:0 0 35px}
+.browseapp .download-options svg{width:17px;height:17px}
+.browseapp>.indicators svg{width:15px;height:15px}
+@media(max-width:980px){
+ .rowapp.browseapp{grid-template-columns:32px minmax(0,1fr);grid-template-areas:"fav info" "indicators buttons";padding:8px 10px;row-gap:5px}
+ .browseapp>.fav{grid-area:fav;align-self:center}
+ .browseapp>.info{grid-area:info}
+ .browseapp>.indicators{grid-area:indicators}
+ .browseapp>.download-options{grid-area:buttons;justify-self:end;flex-wrap:nowrap}
+}
+@media(max-width:390px){
+ .rowapp.browseapp{grid-template-columns:32px minmax(0,1fr);grid-template-areas:"fav info" "indicators buttons"}
+ .browseapp .download-options .download,
+ .browseapp .download-options .official-web,
+ .browseapp .download-options .private-disk{width:34px;min-width:34px;height:33px;min-height:33px;flex:0 0 34px}
+}
 </style>
 </head>
 <body>
@@ -256,8 +281,7 @@ function makeCard(app){
  const item=document.createElement('article');item.className='rowapp browseapp';
  const info=document.createElement('div');info.className='info';
  const title=document.createElement('div');title.className='name';title.textContent=app.name;
- const meta=document.createElement('div');meta.className='meta';meta.textContent=app.version;
- info.append(title,meta);
+ info.append(title);
  const fav=document.createElement('button');fav.className='fav'+(favorites.includes(app.id)?' on':'');fav.textContent=favorites.includes(app.id)?'★':'☆';fav.title='Favorito';fav.setAttribute('aria-label','Favorito '+app.name);fav.onclick=e=>{e.stopPropagation();favorites=favorites.includes(app.id)?favorites.filter(x=>x!==app.id):[...favorites,app.id];saveFav();render()};
  const downloadBox=document.createElement('div');downloadBox.className='download-options';
  const choices=app.downloads||[];

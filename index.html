@@ -359,6 +359,53 @@ $('resetSearch').addEventListener('click', ()=>{ query=''; $('search').value='';
 $('favs').addEventListener('click', ()=>{ onlyFav=!onlyFav; render(); });
 render();
 </script>
-<button id="logoutSecure" type="button" aria-label="Cerrar sesión" style="position:fixed;right:14px;bottom:14px;z-index:999;background:#292e35;color:#f6b821;border:1px solid #777;border-radius:10px;padding:10px 13px;cursor:pointer;font:600 12px system-ui">Cerrar sesión</button><script>document.getElementById('logoutSecure').addEventListener('click',async()=>{await fetch('/api/logout',{method:'POST',credentials:'same-origin'});location.href='/login'})</script>
+<button id="logoutSecure" type="button" aria-label="Cerrar sesión" style="position:fixed;right:14px;bottom:14px;z-index:999;background:#292e35;color:#f6b821;border:1px solid #777;border-radius:10px;padding:10px 13px;cursor:pointer;font:600 12px system-ui">Cerrar sesión</button>
+<script>
+(() => {
+ const IDLE_MS=5*60*1000;
+ const RENEW_INTERVAL_MS=45000;
+ let lastActivity=Date.now(),lastRenewal=Date.now(),idleTimer,refreshing=false,leaving=false;
+ async function logout(){
+   if(leaving)return;
+   leaving=true;
+   try{await fetch('/api/logout',{method:'POST',credentials:'same-origin',cache:'no-store'})}catch{}
+   location.replace('/login');
+ }
+ function schedule(){
+   clearTimeout(idleTimer);
+   idleTimer=setTimeout(()=>{if(Date.now()-lastActivity>=IDLE_MS)logout();else schedule()},Math.max(250,IDLE_MS-(Date.now()-lastActivity)));
+ }
+ async function renew(){
+   if(refreshing||leaving||Date.now()-lastRenewal<RENEW_INTERVAL_MS)return;
+   if(Date.now()-lastActivity>=IDLE_MS){logout();return}
+   refreshing=true;
+   try{
+     const r=await fetch('/api/session',{method:'POST',credentials:'same-origin',cache:'no-store'});
+     if(!r.ok){logout();return}
+     lastRenewal=Date.now();
+   }catch{logout()}
+   finally{refreshing=false}
+ }
+ function activity(){
+   if(leaving)return;
+   if(Date.now()-lastActivity>=IDLE_MS){logout();return}
+   lastActivity=Date.now();schedule();void renew();
+ }
+ for(const type of ['pointerdown','keydown','wheel','touchstart']){
+   document.addEventListener(type,activity,{passive:true});
+ }
+ document.addEventListener('visibilitychange',()=>{
+   if(document.visibilityState==='visible'){
+     if(Date.now()-lastActivity>=IDLE_MS)logout();
+     else void renew();
+   }
+ });
+ window.addEventListener('pageshow',()=>{
+   if(Date.now()-lastActivity>=IDLE_MS)logout();
+ });
+ document.getElementById('logoutSecure').addEventListener('click',logout);
+ schedule();
+})();
+</script>
 </body>
 </html>

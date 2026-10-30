@@ -78,6 +78,7 @@ a{color:inherit}
 .categorybody.list{display:grid;gap:10px}.categorybody.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px}
 @media (max-width: 980px){.app{grid-template-columns:1fr}.side{position:static;height:auto;border-right:0;border-bottom:1px solid var(--border)}.main{padding:20px}.filters{grid-template-columns:1fr}.clear{grid-column:auto}}
 @media (max-width: 640px){.hero{padding:24px 18px}.hero h1{font-size:32px}.filters{grid-template-columns:1fr}.rowapp{grid-template-columns:auto 1fr;grid-template-areas:'icon info' 'fav btn';align-items:start}.rowapp>.appicon{grid-area:icon}.rowapp>.info{grid-area:info}.rowapp>.fav{grid-area:fav;justify-self:start}.rowapp>.download{grid-area:btn;justify-self:end}.tiles{grid-template-columns:1fr 1fr}}
+.disclaimer{display:flex;align-items:center;gap:11px;background:#f1efea;border:1px solid #dedbd3;border-radius:12px;color:#515760;font-size:12px;line-height:1.5;padding:12px 15px;margin:4px 0 18px}.disclaimer-icon{font-size:19px;color:#565d65;flex-shrink:0}
 </style>
 </head>
 <body>
@@ -110,6 +111,7 @@ a{color:inherit}
 
     
 
+    <div class="disclaimer" role="note"><span class="disclaimer-icon" aria-hidden="true">ⓘ</span><span>Este sitio no aloja ejecutables de software sino recopila enlaces públicos.</span></div>
     <div id="results" class="list"></div>
     
     <div class="footer"><span>Es el de Sistemas · Uso técnico</span><span>Centro de descargas</span></div>
